@@ -12,6 +12,20 @@ const totalLikes = blogs => {
     : blogs.reduce(reducer, 0);
 };
 
+const favoriteBlog = blogs => {
+  if (blogs.length === 0) return null;
+
+  return blogs
+    .map(blog => {
+      return { title: blog.title, author: blog.author, likes: blog.likes };
+    })
+    .reduce((curr, next) => {
+      return curr.likes > next.likes
+        ? curr
+        : next;
+    });
+};
+
 module.exports = {
-  dummy, totalLikes
+  dummy, totalLikes, favoriteBlog
 };
