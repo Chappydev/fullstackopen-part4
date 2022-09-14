@@ -50,6 +50,30 @@ describe('GET request', () => {
   });
 });
 
+describe('POST request', () => {
+  test('works when given a valid blog', async () => {
+    const newBlog = {
+      title: "A sad blog",
+      author: "Sara F. Sad",
+      url: "www.sara.com",
+      likes: 8
+    };
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(201)
+      .expect('Content-Type', /application\/json/);
+
+    const response = await api.get('/api/blogs');
+
+    const titles = response.body.map(blog => blog.title);
+
+    expect(response.body).toHaveLength(initialBlogs.length + 1);
+    expect(titles).toContain(newBlog.title);
+  })
+});
+
 
 afterAll(() => {
   mongoose.connection.close();
