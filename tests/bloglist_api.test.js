@@ -51,6 +51,22 @@ describe('GET request', () => {
 });
 
 describe('POST request', () => {
+  test('without title and url gets 400 Bad Request', async () => {
+    const noTitleOrUrl = {
+      author: "Some Person",
+      likes: 2
+    };
+
+    await api
+      .post('/api/blogs')
+      .send(noTitleOrUrl)
+      .expect(400)
+
+    const response = await api.get('/api/blogs');
+
+    expect(response.body).toHaveLength(initialBlogs.length);
+  });
+
   test('works when given a valid blog', async () => {
     const newBlog = {
       title: "A sad blog",
@@ -78,7 +94,7 @@ describe('POST request', () => {
       title: "An angry blog",
       author: "Melissa Q. Mad",
       url: "www.melissa.com"
-    }
+    };
 
     await api
       .post('/api/blogs')
