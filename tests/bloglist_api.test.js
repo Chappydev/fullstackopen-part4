@@ -1,28 +1,29 @@
 const mongoose = require('mongoose');
 const supertest = require('supertest');
+const helper = require('./test_helper');
 const app = require('../app');
 const api = supertest(app);
 const Blog = require('../models/blog');
 
-const initialBlogs = [
-  {
-    title: "A funny blog",
-    author: "John A. Guy",
-    url: "www.john.com",
-    likes: 3
-  },
-  {
-    title: "A serious blog",
-    author: "Bob E. McGee",
-    url: "www.bob.com",
-    likes: 12
-  }
-];
+// const initialBlogs = [
+//   {
+//     title: "A funny blog",
+//     author: "John A. Guy",
+//     url: "www.john.com",
+//     likes: 3
+//   },
+//   {
+//     title: "A serious blog",
+//     author: "Bob E. McGee",
+//     url: "www.bob.com",
+//     likes: 12
+//   }
+// ];
 
 beforeEach(async () => {
   await Blog.deleteMany({});
 
-  for (let blog of initialBlogs) {
+  for (let blog of helper.initialBlogs) {
     let blogObject = new Blog(blog);
     await blogObject.save();
   };
@@ -35,7 +36,7 @@ describe('GET request', () => {
       .expect(200)
       .expect('Content-Type', /application\/json/);
 
-    expect(response.body).toHaveLength(2);
+    expect(response.body).toHaveLength(helper.initialBlogs.length);
   });
 
   test('unique identifier is named "id"', async () => {
@@ -62,9 +63,9 @@ describe('POST request', () => {
       .send(noTitleOrUrl)
       .expect(400)
 
-    const response = await api.get('/api/blogs');
+    const blogsAtEnd = await helper.blogsInDb();
 
-    expect(response.body).toHaveLength(initialBlogs.length);
+    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length);
   });
 
   test('works when given a valid blog', async () => {
@@ -81,11 +82,11 @@ describe('POST request', () => {
       .expect(201)
       .expect('Content-Type', /application\/json/);
 
-    const response = await api.get('/api/blogs');
+    const blogsAtEnd = await helper.blogsInDb();
 
-    const titles = response.body.map(blog => blog.title);
+    const titles = blogsAtEnd.map(blog => blog.title);
 
-    expect(response.body).toHaveLength(initialBlogs.length + 1);
+    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length + 1);
     expect(titles).toContain(newBlog.title);
   });
 
@@ -101,12 +102,33 @@ describe('POST request', () => {
       .send(noLikesProp)
       .expect(201)
       .expect('Content-Type', /application\/json/);
-    const response = await api.get('/api/blogs');
-    console.log(response.body);
+    
+      const blogsAtEnd = await helper.blogsInDb();
 
-    const likes = response.body.map(blog => blog.likes);
+    const likes = blogsAtEnd.map(blog => blog.likes);
 
     expect(likes[likes.length - 1]).toBe(0);
+  });
+});
+
+describe('DELETE request', () => {
+  test('with valid id succeeds with status code 204', async () => {
+    const blogsAtStart = await helper.blogsInDb();
+    const blogToDelete = blogsAtStart[0];
+    
+    await api
+      .delete(`/api/blogs/${blogToDelete.id}`)
+      .expect(204);
+
+    const blogsAtEnd = await helper.blogsInDb();
+
+    expect(blogsAtEnd).toHaveLength(
+      helper.initialBlogs.length - 1
+    );
+
+    const titles = blogsAtEnd.map(blog => blog.title);
+
+    expect(titles).not.toContain(blogToDelete.title);
   });
 });
 
