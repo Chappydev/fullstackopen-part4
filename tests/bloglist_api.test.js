@@ -71,7 +71,27 @@ describe('POST request', () => {
 
     expect(response.body).toHaveLength(initialBlogs.length + 1);
     expect(titles).toContain(newBlog.title);
-  })
+  });
+
+  test('defaults to 0 likes when not defined', async () => {
+    const noLikesProp = {
+      title: "An angry blog",
+      author: "Melissa Q. Mad",
+      url: "www.melissa.com"
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(noLikesProp)
+      .expect(201)
+      .expect('Content-Type', /application\/json/);
+    const response = await api.get('/api/blogs');
+    console.log(response.body);
+
+    const likes = response.body.map(blog => blog.likes);
+
+    expect(likes[likes.length - 1]).toBe(0);
+  });
 });
 
 
