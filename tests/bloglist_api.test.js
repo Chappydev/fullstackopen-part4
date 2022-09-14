@@ -132,6 +132,30 @@ describe('DELETE request', () => {
   });
 });
 
+describe('PUT request', () => {
+  test('with valid id succeeds with 200 and JSON', async () => {
+    const blogsAtStart = await helper.blogsInDb();
+    const blogBeforeUpdate = blogsAtStart[0];
+    const blogToUpdate = { 
+      title: blogBeforeUpdate.title,
+      author: blogBeforeUpdate.author,
+      url: blogBeforeUpdate.url, 
+      likes: blogBeforeUpdate.likes * 10 
+    };
+
+    await api
+      .put(`/api/blogs/${blogBeforeUpdate.id}`)
+      .send(blogToUpdate)
+      .expect(200)
+      .expect('Content-Type', /application\/json/);
+    
+    const blogsAtEnd = await helper.blogsInDb();
+
+    expect(blogsAtEnd[0].title).toBe(blogBeforeUpdate.title);
+    expect(blogsAtEnd[0].likes).toBe(blogBeforeUpdate.likes * 10);
+  });
+});
+
 
 afterAll(() => {
   mongoose.connection.close();
