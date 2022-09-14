@@ -37,6 +37,17 @@ describe('GET request', () => {
 
     expect(response.body).toHaveLength(2);
   });
+
+  test('unique identifier is named "id"', async () => {
+    const response = await api
+      .get('/api/blogs')
+      .expect(200)
+      .expect('Content-Type', /application\/json/);
+
+    const blog = response.body[0];
+
+    expect(Object.keys(blog)).toContain('id');
+  });
 });
 
 
