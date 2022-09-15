@@ -5,21 +5,6 @@ const app = require('../app');
 const api = supertest(app);
 const Blog = require('../models/blog');
 
-// const initialBlogs = [
-//   {
-//     title: "A funny blog",
-//     author: "John A. Guy",
-//     url: "www.john.com",
-//     likes: 3
-//   },
-//   {
-//     title: "A serious blog",
-//     author: "Bob E. McGee",
-//     url: "www.bob.com",
-//     likes: 12
-//   }
-// ];
-
 beforeEach(async () => {
   await Blog.deleteMany({});
 
