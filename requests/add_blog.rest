@@ -1,9 +1,10 @@
 POST http://localhost:3001/api/blogs
 Content-Type: application/json
+Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3QgMiIsImlkIjoiNjMyMzYyY2U4NDZiMDE4ZDNjMjY3ZDZlIiwiaWF0IjoxNjYzNDUwNjYzfQ.RQkhDqMJoer2aZM4-nAI2RIsr2hCSnp_5KiRwOHLeeU
 
 {
-  "title": "Blog 7",
-  "author": "Guy 7",
-  "url": "url 7",
+  "title": "Blog 9",
+  "author": "Guy 9",
+  "url": "url 9",
   "likes": 0
 }
