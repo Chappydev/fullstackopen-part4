@@ -11,8 +11,6 @@ beforeEach(async () => {
   await User.deleteMany({});
 
   const user = await helper.addInitialUser();
-  console.log(user);
-  // const token = helper.generateToken(user._id, user.username);
 
   for (let blog of helper.initialBlogs) {
     blogToAdd = { ...blog, user: user._id };
@@ -47,15 +45,20 @@ describe('GET request', () => {
 
 describe('POST request', () => {
   test('without title and url gets 400 Bad Request', async () => {
+    const user = await User.findOne({});
+    const token = await helper.generateToken(user._id);
+    
     const noTitleOrUrl = {
       author: "Some Person",
-      likes: 2
+      likes: 2,
+      user: user._id
     };
 
     await api
       .post('/api/blogs')
       .send(noTitleOrUrl)
-      .expect(400)
+      .set('Authorization', `bearer ${token}`)
+      .expect(400);
 
     const blogsAtEnd = await helper.blogsInDb();
 
@@ -63,6 +66,9 @@ describe('POST request', () => {
   });
 
   test('works when given a valid blog', async () => {
+    const user = await User.findOne({});
+    const token = await helper.generateToken(user._id);
+
     const newBlog = {
       title: "A sad blog",
       author: "Sara F. Sad",
@@ -73,6 +79,7 @@ describe('POST request', () => {
     await api
       .post('/api/blogs')
       .send(newBlog)
+      .set('Authorization', `bearer ${token}`)
       .expect(201)
       .expect('Content-Type', /application\/json/);
 
@@ -85,6 +92,9 @@ describe('POST request', () => {
   });
 
   test('defaults to 0 likes when not defined', async () => {
+    const user = await User.findOne({});
+    const token = await helper.generateToken(user._id);
+    
     const noLikesProp = {
       title: "An angry blog",
       author: "Melissa Q. Mad",
@@ -94,24 +104,48 @@ describe('POST request', () => {
     await api
       .post('/api/blogs')
       .send(noLikesProp)
+      .set('Authorization', `bearer ${token}`)
       .expect(201)
       .expect('Content-Type', /application\/json/);
     
-      const blogsAtEnd = await helper.blogsInDb();
+    const blogsAtEnd = await helper.blogsInDb();
 
     const likes = blogsAtEnd.map(blog => blog.likes);
 
     expect(likes[likes.length - 1]).toBe(0);
   });
+
+  test('without token gets 401 Unauthorized', async () => {
+    const newBlog = {
+      title: "A sad blog",
+      author: "Sara F. Sad",
+      url: "www.sara.com",
+      likes: 8
+    };
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(401)
+      .expect('Content-Type', /application\/json/);
+
+    const blogsAtEnd = await helper.blogsInDb();
+
+    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length);
+  });
 });
 
 describe('DELETE request', () => {
   test('with valid id succeeds with status code 204', async () => {
+    const user = await User.findOne({});
+    const token = await helper.generateToken(user._id);
+
     const blogsAtStart = await helper.blogsInDb();
     const blogToDelete = blogsAtStart[0];
     
     await api
       .delete(`/api/blogs/${blogToDelete.id}`)
+      .set('Authorization', `bearer ${token}`)
       .expect(204);
 
     const blogsAtEnd = await helper.blogsInDb();
@@ -123,6 +157,20 @@ describe('DELETE request', () => {
     const titles = blogsAtEnd.map(blog => blog.title);
 
     expect(titles).not.toContain(blogToDelete.title);
+  });
+
+  test('without token gets 401 Unauthorized', async () => {
+    const blogsAtStart = await helper.blogsInDb();
+    const blogToDelete = blogsAtStart[0];
+
+    await api
+      .delete(`/api/blogs/${blogToDelete.id}`)
+      .expect(401)
+      .expect('Content-Type', /application\/json/);
+
+    const blogsAtEnd = await helper.blogsInDb();
+
+    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length);
   });
 });
 
