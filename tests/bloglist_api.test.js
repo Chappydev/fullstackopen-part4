@@ -4,13 +4,22 @@ const helper = require('./test_helper');
 const app = require('../app');
 const api = supertest(app);
 const Blog = require('../models/blog');
+const User = require('../models/user');
 
 beforeEach(async () => {
   await Blog.deleteMany({});
+  await User.deleteMany({});
+
+  const user = await helper.addInitialUser();
+  console.log(user);
+  // const token = helper.generateToken(user._id, user.username);
 
   for (let blog of helper.initialBlogs) {
-    let blogObject = new Blog(blog);
-    await blogObject.save();
+    blogToAdd = { ...blog, user: user._id };
+    let blogObject = new Blog(blogToAdd);
+    const createdBlog = await blogObject.save();
+    user.blogs = user.blogs.concat(createdBlog);
+    await user.save();
   };
 });
 

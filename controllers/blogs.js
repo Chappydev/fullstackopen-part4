@@ -14,6 +14,10 @@ blogsRouter.get('/', async (request, response) => {
 blogsRouter.post('/', async (request, response) => {
   const body = request.body;
 
+  if (request.user === null) {
+    return res.status(401).json({ error: 'Token missing or invalid' });
+  }
+
   if (!body.title || !body.url) {
     return response.status(400).json({
       error: "Must include a title and url"
@@ -36,6 +40,10 @@ blogsRouter.post('/', async (request, response) => {
 });
 
 blogsRouter.delete('/:id', async (request, response) => {
+  if (request.user === null) {
+    return res.status(401).json({ error: 'Token missing or invalid' });
+  }
+
   const blogToDelete = await Blog.findById(request.params.id);
   if (blogToDelete.user.toString() !== request.user._id.toString()) {
     return response.status(401).json({
